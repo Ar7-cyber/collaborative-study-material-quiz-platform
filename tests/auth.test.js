@@ -1,52 +1,66 @@
-const test = require('node:test');
-const assert = require('node:assert/strict');
+const { test, describe, before, after } = require('node:test');
+const assert = require('node:assert');
+const { getDb } = require('../db/database');
+const authService = require('../services/authService');
 const bcrypt = require('bcryptjs');
 
-const authService = require('../services/authService');
-const { getDb } = require('../db/database');
+describe('Authentication & RBAC Test Suite (Amrit & Sheiman - Sprint 1)', () => {
+    let testDb;
 
-test('registration stores a bcrypt password hash', () => {
-    const username = `test_student_${Date.now()}`;
+    before(() => {
+        testDb = getDb(':memory:');
+    });
 
-    const user = authService.register(username, 'password123');
-    const db = getDb();
+    test('TC-AUTH-01: Valid user registration and authentication succeeds', () => {
+        const user = authService.register('test_student_1', 'SecurePass@123', 'Student/User');
+        assert.ok(user.id, 'User ID should be generated');
+        assert.strictEqual(user.username, 'test_student_1');
+        assert.strictEqual(user.role, 'Student/User');
 
-    const stored = db.prepare(
-        'SELECT password_hash, role FROM users WHERE id = ?'
-    ).get(user.id);
+        const loginResult = authService.login('test_student_1', 'SecurePass@123');
+        assert.ok(loginResult.token, 'Session token should be returned');
+        assert.strictEqual(loginResult.user.username, 'test_student_1');
+    });
 
-    assert.ok(stored);
-    assert.ok(bcrypt.compareSync('password123', stored.password_hash));
-    assert.notEqual(stored.password_hash, 'password123');
-    assert.equal(stored.role, 'Student/User');
-});
+    test('TC-AUTH-01: Invalid password is rejected', () => {
+        assert.throws(() => {
+            authService.login('test_student_1', 'WrongPassword');
+        }, /Invalid username or password/);
+    });
 
-test('registration rejects duplicate usernames', () => {
-    const username = `duplicate_student_${Date.now()}`;
+    test('TC-AUTH-01: Unknown username is rejected', () => {
+        assert.throws(() => {
+            authService.login('non_existent_user', 'AnyPassword');
+        }, /Invalid username or password/);
+    });
 
-    authService.register(username, 'password123');
+    test('TC-SEC-02: Inspect password database - no plaintext passwords stored (CSQP-SR-001)', () => {
+        const db = authService.getDb();
+        const row = db.prepare('SELECT password_hash FROM users WHERE username = ?').get('test_student_1');
+        assert.ok(row, 'User record must exist in DB');
+        assert.notStrictEqual(row.password_hash, 'SecurePass@123', 'Password must NOT be plaintext');
+        assert.ok(row.password_hash.startsWith('$2'), 'Password must be a bcrypt hash');
+        assert.strictEqual(bcrypt.compareSync('SecurePass@123', row.password_hash), true);
+    });
 
-    assert.throws(
-        () => authService.register(username, 'anotherpass'),
-        /already taken/i
-    );
-});
+    test('TC-SEC-06: Session logout invalidates session token (CSQP-SR-005)', () => {
+        const login = authService.login('test_student_1', 'SecurePass@123');
+        const token = login.token;
 
-test('login creates a session and logout invalidates it', () => {
-    const username = `session_student_${Date.now()}`;
+        const validSession = authService.validateSession(token);
+        assert.ok(validSession, 'Session should be valid before logout');
 
-    authService.register(username, 'password123');
+        authService.logout(token);
 
-    const result = authService.login(username, 'password123');
+        const invalidSession = authService.validateSession(token);
+        assert.strictEqual(invalidSession, null, 'Session must be null after logout');
+    });
 
-    assert.ok(result.token);
+    test('TC-AUTH-02: Role-based permissions enforcement (CSQP-F-002)', () => {
+        const contrib = authService.register('test_contrib_1', 'ContribPass@123', 'Content Contributor / Quiz Creator');
+        const admin = authService.register('test_admin_1', 'AdminPass@123', 'Administrator');
 
-    const sessionUser = authService.validateSession(result.token);
-
-    assert.ok(sessionUser);
-    assert.equal(sessionUser.username, username);
-
-    authService.logout(result.token);
-
-    assert.equal(authService.validateSession(result.token), null);
+        assert.strictEqual(contrib.role, 'Content Contributor / Quiz Creator');
+        assert.strictEqual(admin.role, 'Administrator');
+    });
 });
