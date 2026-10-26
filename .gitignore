@@ -1,0 +1,29 @@
+# Dependencies
+node_modules/
+
+# Environment variables and secrets
+.env
+.env.*
+!.env.example
+
+# Logs
+*.log
+npm-debug.log*
+
+# macOS
+.DS_Store
+
+# Test output
+coverage/
+
+# Generated databases
+*.sqlite
+*.sqlite3
+*.db
+
+# Uploaded/generated files
+uploads/*
+!uploads/.gitkeep
+
+data/*
+!data/.gitkeep

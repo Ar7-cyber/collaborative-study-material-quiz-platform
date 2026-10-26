@@ -1,0 +1,27 @@
+{
+  "name": "collaborative-study-material-quiz-platform",
+  "version": "1.0.0",
+  "description": "Collaborative Study Material & Quiz Platform - Team 16 Software Engineering Mini Project",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node --watch server.js",
+    "test": "NODE_ENV=test node --test tests/*.test.js",
+    "seed": "node db/seed.js"
+  },
+  "keywords": [
+    "study-material",
+    "quiz",
+    "collaborative-learning",
+    "software-engineering"
+  ],
+  "author": "Team 16 (Amrit Raj Anmol, Aditya Raj, Ahan Charan, A Sheiman Joshi)",
+  "license": "ISC",
+  "dependencies": {
+    "better-sqlite3": "^11.8.1",
+    "bcryptjs": "^3.0.2",
+    "cookie-parser": "^1.4.7",
+    "express": "^4.21.2",
+    "multer": "^1.4.5-lts.1"
+  }
+}
