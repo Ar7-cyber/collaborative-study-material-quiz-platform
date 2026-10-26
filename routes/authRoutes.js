@@ -3,17 +3,26 @@ const router = express.Router();
 const authService = require('../services/authService');
 const { requireAuth } = require('../middleware/auth');
 
-router.post('/register', (req, res) => {
-    try {
-        const { username, password, role } = req.body;
-        const user = authService.register(username, password, role, req.ip);
-        res.status(201).json({
-            message: 'User registered successfully',
-            user
-        });
+router.post(’/register’, (req, res) => {
+   try {
+        const { username, password } = req.body;
+
+         // Public registration must never grant elevated privileges.
+         const user = authService.register(
+             username,
+             password,
+             'Student/User',
+             req.ip
+          );
+
+          res.status(201).json({
+              message: 'User registered successfully',
+              user
+           });
     } catch (err) {
-        res.status(400).json({ error: err.message });
+         res.status(400).json({ error: err.message });
     }
+
 });
 
 router.post('/login', (req, res) => {
