@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Administration Console - CSQP Team 16</title>
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+    <header>
+        <div class="nav-container">
+            <a href="/" class="logo">📚 CSQP <span>| Team 16 Administration</span></a>
+            <div class="nav-links">
+                <a href="/">Dashboard</a>
+                <a href="/quiz.html">Quizzes</a>
+                <a href="/admin.html" style="color: var(--primary); font-weight: 700;">Admin Console</a>
+                <div id="nav-auth"></div>
+            </div>
+        </div>
+    </header>
+
+    <main class="container">
+        <div style="margin-bottom: 2rem;">
+            <h1 style="font-size: 1.85rem; font-weight: 800; color: var(--text-main);">System Administration & Moderation</h1>
+            <p style="color: var(--text-muted); font-size: 0.95rem;">Manage platform users, moderate study materials, and review tamper-proof security audit logs (CSQP-F-020..022).</p>
+        </div>
+
+        <!-- Section 1: User Management (CSQP-F-020) -->
+        <div class="detail-box" style="margin-bottom: 2rem;">
+            <div class="cards-header">
+                <div>
+                    <h2 style="font-size: 1.25rem; font-weight: 700;">User Account Management</h2>
+                    <span style="font-size: 0.85rem; color: var(--text-muted);">Enable/Disable accounts and manage Role-Based Access Control</span>
+                </div>
+                <button class="btn btn-outline btn-sm" onclick="AdminApp.loadUsers()">Refresh Users</button>
+            </div>
+
+            <table class="leaderboard-table">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Username</th>
+                        <th>Current Role</th>
+                        <th>Status</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="users-table-body">
+                    <tr><td colspan="5" style="text-align: center;">Loading users...</td></tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Section 2: Tamper-proof Audit Log Viewer (CSQP-F-022, TC-SEC-01) -->
+        <div class="detail-box">
+            <div class="cards-header">
+                <div>
+                    <h2 style="font-size: 1.25rem; font-weight: 700;">Security & Administrative Audit Logs</h2>
+                    <span style="font-size: 0.85rem; color: var(--text-muted);">Timestamped immutable action history with zero plaintext passwords</span>
+                </div>
+                <button class="btn btn-outline btn-sm" onclick="AdminApp.loadLogs()">Refresh Logs</button>
+            </div>
+
+            <table class="leaderboard-table" style="font-size: 0.88rem;">
+                <thead>
+                    <tr>
+                        <th>Timestamp</th>
+                        <th>Action</th>
+                        <th>User</th>
+                        <th>Details</th>
+                        <th>IP Address</th>
+                    </tr>
+                </thead>
+                <tbody id="logs-table-body">
+                    <tr><td colspan="5" style="text-align: center;">Loading audit logs...</td></tr>
+                </tbody>
+            </table>
+        </div>
+    </main>
+
+    <footer>
+        <p>&copy; 2026 PES University | Software Engineering Mini-Project — Team 16</p>
+    </footer>
+
+    <script src="/js/app.js"></script>
+    <script src="/js/admin.js"></script>
+</body>
+</html>
