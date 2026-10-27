@@ -67,3 +67,13 @@ The CSQP platform uses a multi-stage **Continuous Integration and Continuous Dep
 1. Every feature branch must pass Stage 1 and Stage 2 before a Pull Request can be merged.
 2. PR mergers are blocked if any of the 22 automated test suites fail.
 3. Release archives are automatically generated upon Amrit's merge into `main`.
+
+
+---
+
+### 4. GitHub Actions Step Summary Integration
+To provide full visibility for code reviews and grading evaluation, each stage appends a rich Markdown report directly into `$GITHUB_STEP_SUMMARY`:
+1. **Lint Summary:** Highlights compiled service layers and dependency validation status.
+2. **Test Matrix Summary:** Generates an architectural checklist mapping layers to pass rates.
+3. **Packaging Summary:** Details the created release tarball, file size, and retention period.
+4. **Staging Summary:** Confirms HTTP 200 OK health check response on `http://localhost:3001`.
