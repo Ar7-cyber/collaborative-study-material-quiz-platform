@@ -3,7 +3,7 @@ const router = express.Router();
 const authService = require('../services/authService');
 const { requireAuth } = require('../middleware/auth');
 
-router.post(’/register’, (req, res) => {
+router.post('/register', (req, res) => {
    try {
         const { username, password } = req.body;
 

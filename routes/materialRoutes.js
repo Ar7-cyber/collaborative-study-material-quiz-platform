@@ -215,4 +215,18 @@ router.post('/:id/versions', requireAuth, requireRole('Content Contributor / Qui
     }
 });
 
+// CSQP-F-013: Rollback to Prior Version
+router.post('/:id/rollback/:version', requireAuth, requireRole('Content Contributor / Quiz Creator', 'Administrator'), (req, res) => {
+    try {
+        const rollback = versionService.rollbackToVersion(Number(req.params.id), Number(req.params.version), req.user, req.ip);
+        res.json({
+            message: `Successfully rolled back to version v${req.params.version}`,
+            rollback
+        });
+    } catch (err) {
+        const status = err.message.startsWith('Forbidden') ? 403 : 400;
+        res.status(status).json({ error: err.message });
+    }
+});
+
 module.exports = router;
