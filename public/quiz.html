@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Interactive Quizzes & Leaderboards - CSQP</title>
+    <link rel="stylesheet" href="/css/style.css">
+    <style>
+        .quiz-timer-badge {
+            background: #fee2e2;
+            color: #b91c1c;
+            padding: 0.4rem 0.85rem;
+            border-radius: 9999px;
+            font-weight: 700;
+            font-size: 0.95rem;
+        }
+        .question-card {
+            background: #ffffff;
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 1.5rem;
+            margin-bottom: 1.25rem;
+            box-shadow: var(--shadow);
+        }
+        .option-label {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 0.75rem 1rem;
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            margin-bottom: 0.5rem;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .option-label:hover {
+            background: var(--primary-light);
+            border-color: var(--primary);
+        }
+        .tab-btn {
+            padding: 0.5rem 1rem;
+            background: none;
+            border: none;
+            border-bottom: 2px solid transparent;
+            font-weight: 600;
+            color: var(--secondary);
+            cursor: pointer;
+        }
+        .tab-btn.active {
+            color: var(--primary);
+            border-bottom-color: var(--primary);
+        }
+        .leaderboard-table {
+            width: 100%;
+            border-collapse: collapse;
+            background: #ffffff;
+            border-radius: var(--radius);
+            overflow: hidden;
+            box-shadow: var(--shadow);
+        }
+        .leaderboard-table th, .leaderboard-table td {
+            padding: 0.85rem 1.25rem;
+            text-align: left;
+            border-bottom: 1px solid var(--border);
+        }
+        .leaderboard-table th {
+            background: var(--bg-main);
+            font-size: 0.85rem;
+            text-transform: uppercase;
+            color: var(--secondary);
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="nav-container">
+            <a href="/" class="logo">📚 CSQP <span>| Team 16</span></a>
+            <div class="nav-links">
+                <a href="/">Dashboard</a>
+                <a href="/quiz.html">Quizzes & Leaderboards</a>
+                <div id="nav-auth"></div>
+            </div>
+        </div>
+    </header>
+
+    <main class="container" style="max-width: 960px;">
+        <!-- Tab Navigation -->
+        <div style="display: flex; gap: 1rem; border-bottom: 1px solid var(--border); margin-bottom: 2rem;">
+            <button class="tab-btn active" id="tab-quizzes-btn" onclick="QuizApp.switchTab('quizzes')">Available Quizzes</button>
+            <button class="tab-btn" id="tab-leaderboard-btn" onclick="QuizApp.switchTab('leaderboard')">Global Leaderboard</button>
+            <button class="tab-btn" id="tab-history-btn" onclick="QuizApp.switchTab('history')">My Attempt History</button>
+        </div>
+
+        <!-- Section 1: Quizzes List -->
+        <div id="section-quizzes">
+            <div class="cards-header">
+                <div>
+                    <h2 style="font-size: 1.5rem; font-weight: 700;">Subject Assessment Quizzes</h2>
+                    <p style="color: var(--text-muted); font-size: 0.9rem;">Test your conceptual understanding with timed, randomized evaluations.</p>
+                </div>
+            </div>
+            <div id="quizzes-grid" class="material-cards-grid">
+                <p style="color: var(--text-muted);">Loading quizzes...</p>
+            </div>
+        </div>
+
+        <!-- Section 2: Active Quiz Runner Interface (CSQP-F-015) -->
+        <div id="section-active-quiz" style="display: none;">
+            <div style="display: flex; justify-content: space-between; align-items: center; background: #ffffff; padding: 1.25rem; border-radius: var(--radius); border: 1px solid var(--border); margin-bottom: 1.5rem; box-shadow: var(--shadow);">
+                <div>
+                    <h2 id="active-quiz-title" style="font-size: 1.35rem; font-weight: 700;">Quiz Name</h2>
+                    <span id="active-quiz-sub" style="font-size: 0.85rem; color: var(--primary); font-weight: 600;">Subject</span>
+                </div>
+                <div class="quiz-timer-badge" id="quiz-timer-display">
+                    ⏳ Time Left: 10:00
+                </div>
+            </div>
+
+            <form id="quiz-attempt-form">
+                <div id="questions-container"></div>
+                <div style="display: flex; justify-content: space-between; margin-top: 2rem;">
+                    <button type="button" class="btn btn-outline" onclick="QuizApp.switchTab('quizzes')">Cancel Attempt</button>
+                    <button type="submit" class="btn btn-primary" style="padding: 0.75rem 2rem;">Submit Quiz</button>
+                </div>
+            </form>
+        </div>
+
+        <!-- Section 3: Instant Quiz Results (CSQP-F-017) -->
+        <div id="section-results" style="display: none;">
+            <div class="detail-box" style="text-align: center; padding: 3rem 2rem;">
+                <div style="font-size: 3rem; margin-bottom: 0.5rem;" id="result-icon">🎉</div>
+                <h2 style="font-size: 1.75rem; font-weight: 700; margin-bottom: 0.25rem;" id="result-title">Quiz Completed!</h2>
+                <div style="font-size: 2.5rem; font-weight: 800; color: var(--primary); margin: 1rem 0;" id="result-score">
+                    0 / 0
+                </div>
+                <p style="font-size: 1.1rem; color: var(--text-muted);" id="result-percentage">Score: 0%</p>
+                <p style="font-size: 0.9rem; color: var(--text-muted); margin-bottom: 2rem;" id="result-time">Time Taken: 0s</p>
+
+                <div id="result-breakdown" style="text-align: left; margin: 2rem 0; border-top: 1px solid var(--border); padding-top: 1.5rem;"></div>
+
+                <div style="display: flex; justify-content: center; gap: 1rem;">
+                    <button class="btn btn-primary" onclick="QuizApp.switchTab('leaderboard')">View Leaderboard</button>
+                    <button class="btn btn-outline" onclick="QuizApp.switchTab('quizzes')">Back to Quizzes</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Section 4: Dynamic Leaderboard (CSQP-F-019) -->
+        <div id="section-leaderboard" style="display: none;">
+            <h2 style="font-size: 1.5rem; font-weight: 700; margin-bottom: 0.5rem;">Top Ranked Quiz Performers</h2>
+            <p style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 1.5rem;">Ranked by highest accuracy and fastest completion times.</p>
+            <table class="leaderboard-table">
+                <thead>
+                    <tr>
+                        <th>Rank</th>
+                        <th>Student</th>
+                        <th>Quiz</th>
+                        <th>Score</th>
+                        <th>Accuracy</th>
+                        <th>Time</th>
+                    </tr>
+                </thead>
+                <tbody id="leaderboard-body">
+                    <tr><td colspan="6" style="text-align: center; color: var(--text-muted);">Loading rankings...</td></tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Section 5: My Quiz Attempt History (CSQP-F-018) -->
+        <div id="section-history" style="display: none;">
+            <h2 style="font-size: 1.5rem; font-weight: 700; margin-bottom: 0.5rem;">My Performance Archive</h2>
+            <p style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 1.5rem;">Review your completed evaluations and historical marks.</p>
+            <table class="leaderboard-table">
+                <thead>
+                    <tr>
+                        <th>Quiz Name</th>
+                        <th>Subject</th>
+                        <th>Score</th>
+                        <th>Percentage</th>
+                        <th>Time Spent</th>
+                        <th>Date & Time</th>
+                    </tr>
+                </thead>
+                <tbody id="history-body">
+                    <tr><td colspan="6" style="text-align: center; color: var(--text-muted);">Loading your history...</td></tr>
+                </tbody>
+            </table>
+        </div>
+    </main>
+
+    <footer>
+        <p>&copy; 2026 PES University | Software Engineering Mini-Project — Team 16</p>
+    </footer>
+
+    <script src="/js/app.js"></script>
+    <script src="/js/quiz.js"></script>
+</body>
+</html>
