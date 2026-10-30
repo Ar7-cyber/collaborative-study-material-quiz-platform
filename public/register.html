@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Register - Collaborative Study Material & Quiz Platform</title>
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+    <header>
+        <div class="nav-container">
+            <a href="/" class="logo">
+                📚 CSQP <span>| Team 16</span>
+            </a>
+            <div class="nav-links" id="nav-auth">
+                <a href="/login.html" class="btn btn-outline btn-sm">Login</a>
+            </div>
+        </div>
+    </header>
+
+    <div class="container" style="max-width: 480px; margin-top: 2.5rem;">
+        <div style="background: #ffffff; border: 1px solid var(--border); border-radius: var(--radius); padding: 2rem; box-shadow: var(--shadow-lg);">
+            <h2 style="font-size: 1.5rem; font-weight: 700; margin-bottom: 0.5rem; color: var(--text-main);">Create an Account</h2>
+            <p style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 1.5rem;">Join to discover, author, and evaluate collaborative study resources.</p>
+
+            <form id="register-form">
+                <div class="form-group">
+                    <label class="form-label" for="username">Username</label>
+                    <input type="text" id="username" class="form-control" required minlength="3" placeholder="Choose a unique username">
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="password">Password</label>
+                    <input type="password" id="password" class="form-control" required minlength="6" placeholder="At least 6 characters">
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="role">Assign Platform Role (RBAC)</label>
+                    <select id="role" class="form-control" required>
+                        <option value="Student/User">Student / User (Browse, Rate, Attempt Quizzes)</option>
+                        <option value="Content Contributor / Quiz Creator">Content Contributor / Quiz Creator (Upload & Create Notes)</option>
+                    </select>
+                </div>
+
+                <button type="submit" class="btn btn-primary" style="width: 100%; padding: 0.75rem;">
+                    Register Account
+                </button>
+            </form>
+
+            <div style="margin-top: 1.5rem; text-align: center; font-size: 0.85rem; color: var(--text-muted);">
+                Already have an account? <a href="/login.html" style="color: var(--primary); font-weight: 600; text-decoration: none;">Login here</a>
+            </div>
+        </div>
+    </div>
+
+    <footer>
+        <p>&copy; 2026 PES University | Software Engineering Mini-Project — Team 16</p>
+    </footer>
+
+    <script src="/js/app.js"></script>
+    <script>
+        document.getElementById('register-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const username = document.getElementById('username').value.trim();
+            const password = document.getElementById('password').value;
+            const role = document.getElementById('role').value;
+
+            try {
+                const res = await fetch('/api/auth/register', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ username, password, role })
+                });
+                const data = await res.json();
+                if (res.ok) {
+                    App.showToast('Registration successful! Please sign in.', 'success');
+                    setTimeout(() => {
+                        window.location.href = '/login.html';
+                    }, 800);
+                } else {
+                    App.showToast(data.error || 'Registration failed', 'danger');
+                }
+            } catch (err) {
+                App.showToast('Network error during registration', 'danger');
+            }
+        });
+    </script>
+</body>
+</html>

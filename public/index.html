@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard - Collaborative Study Material & Quiz Platform</title>
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+    <header>
+        <div class="nav-container">
+            <a href="/" class="logo">
+                📚 CSQP <span>| Team 16</span>
+            </a>
+            <div class="nav-links">
+                <a href="/">Dashboard</a>
+                <div id="nav-auth"></div>
+            </div>
+        </div>
+    </header>
+
+    <main class="container">
+        <!-- Hero & Filter Section -->
+        <section class="hero-banner">
+            <h1>Collaborative Study Repository</h1>
+            <p>Discover lecture notes, reference PDFs, and shared resources curated across academic subjects.</p>
+            
+            <div class="search-bar-wrap">
+                <input type="text" id="search-input" class="search-input" placeholder="Search by title, keywords, or content...">
+                <select id="filter-subject" class="filter-select">
+                    <option value="">All Subjects</option>
+                </select>
+                <select id="filter-topic" class="filter-select">
+                    <option value="">All Topics</option>
+                </select>
+                <input type="text" id="filter-contributor" class="filter-select" placeholder="Filter by contributor..." style="width: 170px;">
+                <button class="btn btn-primary" onclick="Dashboard.applyFilters()">Search</button>
+                <button class="btn btn-outline" style="background: white;" onclick="Dashboard.resetFilters()">Reset</button>
+            </div>
+        </section>
+
+        <!-- Main Content Grid -->
+        <div class="content-grid">
+            <!-- Sidebar: Subject/Topic Hierarchy (CSQP-F-005) -->
+            <aside class="sidebar-panel">
+                <div class="sidebar-title">
+                    <span>Course Hierarchy</span>
+                    <button class="btn btn-outline btn-sm" onclick="Dashboard.loadHierarchy()">↻</button>
+                </div>
+                <div id="hierarchy-tree">
+                    <p style="color: var(--text-muted); font-size: 0.85rem;">Loading subjects...</p>
+                </div>
+            </aside>
+
+            <!-- Main Listing Section -->
+            <section>
+                <div class="cards-header">
+                    <div>
+                        <h2 style="font-size: 1.35rem; font-weight: 700;">Available Study Materials</h2>
+                        <span id="materials-count" style="font-size: 0.85rem; color: var(--text-muted);">Showing 0 items</span>
+                    </div>
+
+                    <!-- Contributor Actions (CSQP-F-003, CSQP-F-004) -->
+                    <div class="actions-wrap" id="contributor-actions" style="display: none;">
+                        <button class="btn btn-primary btn-sm" onclick="Dashboard.openNoteModal()">
+                            ✍️ Create Study Note
+                        </button>
+                        <button class="btn btn-outline btn-sm" onclick="Dashboard.openUploadModal()">
+                            📁 Upload PDF / Doc
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Materials Grid -->
+                <div id="materials-container" class="material-cards-grid">
+                    <p style="color: var(--text-muted);">Loading study resources...</p>
+                </div>
+            </section>
+        </div>
+    </main>
+
+    <!-- Modal: Upload PDF / Document (CSQP-F-003) -->
+    <div id="upload-modal" class="modal-overlay">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title">Upload Study Document</h3>
+                <button class="modal-close" onclick="Dashboard.closeModal('upload-modal')">&times;</button>
+            </div>
+            <form id="upload-form">
+                <div class="form-group">
+                    <label class="form-label" for="upload-title">Document Title *</label>
+                    <input type="text" id="upload-title" class="form-control" required placeholder="e.g. Unit 3 Software Testing Lecture Slides">
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="upload-desc">Description</label>
+                    <input type="text" id="upload-desc" class="form-control" placeholder="Brief summary of file contents">
+                </div>
+
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                    <div class="form-group">
+                        <label class="form-label" for="upload-subject">Subject *</label>
+                        <select id="upload-subject" class="form-control" required onchange="Dashboard.populateModalTopics('upload')">
+                            <option value="">Select Subject</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" for="upload-topic">Topic *</label>
+                        <select id="upload-topic" class="form-control" required>
+                            <option value="">Select Topic</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="upload-file">Select File (PDF, TXT, MD - Max 10MB) *</label>
+                    <input type="file" id="upload-file" class="form-control" accept=".pdf,.txt,.md" required>
+                    <small style="color: var(--text-muted); font-size: 0.8rem;">Enforces file-size & MIME type safety (CSQP-SR-004).</small>
+                </div>
+
+                <div style="display: flex; justify-content: flex-end; gap: 0.75rem; margin-top: 1.5rem;">
+                    <button type="button" class="btn btn-outline" onclick="Dashboard.closeModal('upload-modal')">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Upload Document</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal: Create In-Platform Study Note (CSQP-F-004) -->
+    <div id="note-modal" class="modal-overlay">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title">Create In-Platform Study Note</h3>
+                <button class="modal-close" onclick="Dashboard.closeModal('note-modal')">&times;</button>
+            </div>
+            <form id="note-form">
+                <div class="form-group">
+                    <label class="form-label" for="note-title">Note Title *</label>
+                    <input type="text" id="note-title" class="form-control" required placeholder="e.g. Quick Revision: Requirements Traceability Matrix">
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="note-desc">Description</label>
+                    <input type="text" id="note-desc" class="form-control" placeholder="Short description of the note">
+                </div>
+
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                    <div class="form-group">
+                        <label class="form-label" for="note-subject">Subject *</label>
+                        <select id="note-subject" class="form-control" required onchange="Dashboard.populateModalTopics('note')">
+                            <option value="">Select Subject</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" for="note-topic">Topic *</label>
+                        <select id="note-topic" class="form-control" required>
+                            <option value="">Select Topic</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="note-content">Note Content (Markdown supported) *</label>
+                    <textarea id="note-content" class="form-control" required placeholder="Write your collaborative notes, explanations, and formulas here..."></textarea>
+                </div>
+
+                <div style="display: flex; justify-content: flex-end; gap: 0.75rem; margin-top: 1.5rem;">
+                    <button type="button" class="btn btn-outline" onclick="Dashboard.closeModal('note-modal')">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Save & Publish Note</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <footer>
+        <p>&copy; 2026 PES University | Software Engineering Mini-Project — Team 16</p>
+    </footer>
+
+    <script src="/js/app.js"></script>
+    <script src="/js/dashboard.js"></script>
+</body>
+</html>
