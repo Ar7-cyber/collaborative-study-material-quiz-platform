@@ -141,10 +141,23 @@ class AuthService {
     logAudit(userId, action, details, ipAddress = '127.0.0.1') {
         const db = this.getDb();
         try {
-            db.prepare(`
-                INSERT INTO audit_logs (user_id, action, details, ip_address)
-                VALUES (?, ?, ?, ?)
-            `).run(userId, action, details, ipAddress);
+            const crypto = require('crypto');
+            const append = db.transaction(() => {
+                const previous = db.prepare('SELECT record_hash FROM audit_logs ORDER BY id DESC LIMIT 1').get();
+                const previousHash = previous?.record_hash || 'GENESIS';
+                const createdAt = db.prepare("SELECT datetime('now') AS created_at").get().created_at;
+                const result = db.prepare(`
+                    INSERT INTO audit_logs (user_id, action, details, ip_address, created_at, previous_hash, record_hash)
+                    VALUES (?, ?, ?, ?, ?, ?, '')
+                `).run(userId, action, details, ipAddress, createdAt, previousHash);
+                const record = {
+                    id: Number(result.lastInsertRowid), user_id: userId, action, details,
+                    ip_address: ipAddress, created_at: createdAt, previous_hash: previousHash
+                };
+                const recordHash = crypto.createHash('sha256').update(JSON.stringify(record)).digest('hex');
+                db.prepare('UPDATE audit_logs SET record_hash = ? WHERE id = ?').run(recordHash, record.id);
+            });
+            append();
         } catch (err) {
             console.error('Audit log error:', err.message);
         }
