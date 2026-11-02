@@ -75,8 +75,27 @@ CREATE TABLE IF NOT EXISTS audit_logs (
     action TEXT NOT NULL,
     details TEXT,
     ip_address TEXT,
-    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    previous_hash TEXT,
+    record_hash TEXT
 );
+
+
+
+-- User-submitted reports for content moderation (CSQP-AM-06)
+CREATE TABLE IF NOT EXISTS content_flags (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    reporter_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    material_id INTEGER REFERENCES materials(id) ON DELETE CASCADE,
+    comment_id INTEGER REFERENCES comments(id) ON DELETE CASCADE,
+    reason TEXT NOT NULL,
+    status TEXT NOT NULL DEFAULT 'OPEN' CHECK(status IN ('OPEN', 'RESOLVED')),
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    CHECK ((material_id IS NOT NULL AND comment_id IS NULL) OR (material_id IS NULL AND comment_id IS NOT NULL)),
+    UNIQUE(reporter_id, material_id),
+    UNIQUE(reporter_id, comment_id)
+);
+CREATE INDEX IF NOT EXISTS idx_content_flags_status ON content_flags(status, created_at);
 
 -- Sprint 2 Tables: Collaboration & Versioning (CSQP-F-011, CSQP-F-012)
 CREATE TABLE IF NOT EXISTS material_versions (

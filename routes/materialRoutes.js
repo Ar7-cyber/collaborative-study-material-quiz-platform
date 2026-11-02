@@ -4,6 +4,7 @@ const path = require('path');
 const fs = require('fs');
 const materialService = require('../services/materialService');
 const versionService = require('../services/versionService');
+const adminService = require('../services/adminService');
 const { requireAuth, requireRole, authenticate } = require('../middleware/auth');
 const { upload } = require('../middleware/upload');
 
@@ -183,6 +184,21 @@ router.post('/:id/comments', requireAuth, (req, res) => {
     } catch (err) {
         res.status(400).json({ error: err.message });
     }
+});
+
+// CSQP-AM-06: Authenticated users can flag materials and comments for review.
+router.post('/:id/flag', requireAuth, (req, res) => {
+    try {
+        const result = adminService.flagMaterial(Number(req.params.id), req.user, req.body.reason);
+        res.status(201).json({ message: 'Material reported for moderation', ...result });
+    } catch (err) { res.status(400).json({ error: err.message }); }
+});
+
+router.post('/:materialId/comments/:commentId/flag', requireAuth, (req, res) => {
+    try {
+        const result = adminService.flagComment(Number(req.params.commentId), req.user, req.body.reason);
+        res.status(201).json({ message: 'Comment reported for moderation', ...result });
+    } catch (err) { res.status(400).json({ error: err.message }); }
 });
 
 // CSQP-F-011: Version History for Study Material (TC-MAT-09)

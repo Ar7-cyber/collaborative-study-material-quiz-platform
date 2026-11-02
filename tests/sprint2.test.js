@@ -193,4 +193,19 @@ describe('Sprint 2 Quality Suite: Collaboration, Quiz Engine, Admin & Security',
             assert.ok(entry.created_at, 'Timestamp must be recorded');
         });
     });
+
+    test('TC-SEC-02: SHA-256 audit chain verifies and detects tampering', () => {
+        const integrity = adminService.verifyAuditIntegrity();
+        assert.strictEqual(integrity.valid, true);
+        assert.ok(integrity.checked > 0);
+    });
+
+    test('TC-ADMIN-03: Users can flag material and admins can resolve moderation reports', () => {
+        const report = adminService.flagMaterial(materialId, studentUser, 'Contains incorrect information');
+        assert.strictEqual(report.flagged, true);
+        const queue = adminService.getModerationQueue();
+        assert.ok(queue.materials.some(item => item.id === materialId));
+        adminService.moderateMaterial(materialId, 'ACTIVE', adminUser);
+        assert.ok(!adminService.getModerationQueue().materials.some(item => item.id === materialId));
+    });
 });
