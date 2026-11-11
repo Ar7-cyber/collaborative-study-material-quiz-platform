@@ -110,9 +110,12 @@ class QuizService {
             options: q.options_json ? JSON.parse(q.options_json) : null
         }));
 
-        // CSQP-F-014: Question Randomization
+        // CSQP-F-014: Question Randomization (Fisher-Yates unbiased shuffle)
         if (quiz.randomize_questions) {
-            questions = questions.sort(() => Math.random() - 0.5);
+            for (let i = questions.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [questions[i], questions[j]] = [questions[j], questions[i]];
+            }
         }
 
         return {

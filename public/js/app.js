@@ -26,7 +26,11 @@ const App = {
         if (!navAuth) return;
 
         if (this.currentUser) {
+            const adminLink = this.currentUser.role === 'Administrator'
+                ? '<a href="/admin.html" class="btn btn-outline btn-sm" style="margin-right: 0.5rem;">Admin Console</a>'
+                : '';
             navAuth.innerHTML = `
+                ${adminLink}
                 <span class="user-badge" title="Role: ${this.currentUser.role}">
                     👤 ${this.currentUser.username} (${this.getRoleShort(this.currentUser.role)})
                 </span>

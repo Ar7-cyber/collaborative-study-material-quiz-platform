@@ -56,8 +56,9 @@ router.get('/:id/download', authenticate, (req, res) => {
         }
 
         if (material.content_type === 'DOCUMENT') {
-            const filePath = path.join(__dirname, '..', 'uploads', material.file_path);
-            if (!fs.existsSync(filePath)) {
+            const uploadsDir = path.resolve(__dirname, '..', 'uploads');
+            const filePath = path.resolve(uploadsDir, material.file_path);
+            if (!filePath.startsWith(uploadsDir) || !fs.existsSync(filePath)) {
                 return res.status(404).json({ error: 'Stored document file not found on server' });
             }
             res.setHeader('Content-Disposition', `attachment; filename="${material.file_name}"`);

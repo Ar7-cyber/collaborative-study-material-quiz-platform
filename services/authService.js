@@ -141,7 +141,6 @@ class AuthService {
     logAudit(userId, action, details, ipAddress = '127.0.0.1') {
         const db = this.getDb();
         try {
-            const crypto = require('crypto');
             const append = db.transaction(() => {
                 const previous = db.prepare('SELECT record_hash FROM audit_logs ORDER BY id DESC LIMIT 1').get();
                 const previousHash = previous?.record_hash || 'GENESIS';
