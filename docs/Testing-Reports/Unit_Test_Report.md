@@ -89,3 +89,6 @@ This document presents the formal **Unit Test Report** for the Collaborative Stu
 
 ### 3. Conclusion & Quality Gate Approval
 All 26 unit tests passed with **zero regressions**. The platform satisfies all unit-level acceptance criteria specified in the **Software Requirements Specification (SRS)** and **Software Test Plan (STP)**.
+
+**Quality Assurance Sign-Off:**  
+Verified and approved by: **A Sheiman Joshi** (`PES2UG24CS003`) — QA Lead & Quiz Engine Developer
