@@ -44,10 +44,12 @@
             </div>
 
             <div style="margin-top: 1.5rem; padding: 0.75rem; background: var(--bg-main); border-radius: 6px; font-size: 0.8rem; color: var(--secondary);">
-                <strong>Demo Test Accounts:</strong><br>
-                • <code>prof_contributor</code> / <code>Contrib@1234</code> (Contributor)<br>
-                • <code>student_aditya</code> / <code>Student@1234</code> (Student)<br>
-                • <code>admin_user</code> / <code>Admin@1234</code> (Administrator)
+                <strong>Demo Test Accounts (1-Click Fill):</strong><br>
+                <div style="display: flex; gap: 6px; margin-top: 8px; flex-wrap: wrap;">
+                    <button type="button" class="btn btn-outline btn-sm" onclick="fillDemo('student_aditya', 'Student@1234')">Student</button>
+                    <button type="button" class="btn btn-outline btn-sm" onclick="fillDemo('prof_contributor', 'Contrib@1234')">Contributor</button>
+                    <button type="button" class="btn btn-outline btn-sm" onclick="fillDemo('admin_user', 'Admin@1234')">Admin</button>
+                </div>
             </div>
         </div>
     </div>
@@ -58,6 +60,10 @@
 
     <script src="/js/app.js"></script>
     <script>
+        function fillDemo(u, p) {
+            document.getElementById('username').value = u;
+            document.getElementById('password').value = p;
+        }
         document.getElementById('login-form').addEventListener('submit', async (e) => {
             e.preventDefault();
             const username = document.getElementById('username').value.trim();

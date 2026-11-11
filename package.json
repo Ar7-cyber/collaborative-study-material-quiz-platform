@@ -7,6 +7,7 @@
     "start": "node server.js",
     "dev": "node --watch server.js",
     "test": "NODE_ENV=test node --test tests/*.test.js",
+    "test:coverage": "NODE_ENV=test node --test --experimental-test-coverage tests/*.test.js",
     "seed": "node db/seed.js"
   },
   "keywords": [
@@ -18,8 +19,8 @@
   "author": "Team 16 (Amrit Raj Anmol, Aditya Raj, Ahan Charan, A Sheiman Joshi)",
   "license": "ISC",
   "dependencies": {
-    "better-sqlite3": "^11.8.1",
     "bcryptjs": "^3.0.2",
+    "better-sqlite3": "^11.8.1",
     "cookie-parser": "^1.4.7",
     "express": "^4.21.2",
     "multer": "^1.4.5-lts.1"

@@ -27,3 +27,11 @@ uploads/*
 
 data/*
 !data/.gitkeep
+
+# Personal & local submission helper artifacts (not part of git requirements)
+*.zip
+scripts/
+*Viva*
+*viva*
+/*.pdf
+/*.html
