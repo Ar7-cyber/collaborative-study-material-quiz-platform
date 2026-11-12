@@ -61,6 +61,20 @@ The database is pre-seeded with three distinct role accounts for testing Role-Ba
 
 ---
 
+## 🖥️ Frontend File Guide
+
+| File | Purpose |
+| :--- | :--- |
+| `public/index.html`, `public/js/dashboard.js` | Dashboard with material search, filters and cards |
+| `public/material.html`, `public/js/material.js` | Material detail reader, ratings, comments and versions |
+| `public/quiz.html`, `public/js/quiz.js` | Quiz list, timed attempt runner, results, leaderboard and history |
+| `public/admin.html`, `public/js/admin.js` | Administrator console |
+| `public/login.html`, `public/register.html` | Authentication pages |
+| `public/js/app.js` | Shared `App` helpers: auth check, navigation, toasts, `escapeHtml` |
+| `public/css/style.css` | Shared stylesheet used by every page |
+
+---
+
 ## 🏗️ Architecture Overview
 
 The platform strictly adheres to the **Layered Architectural Style** documented in [`docs/SAD/Team_16_PES2UG24CS003_PES2UG24CS033_PES2UG24CS056_PES2UG24CS037_SAD.pdf`](docs/SAD/Team_16_PES2UG24CS003_PES2UG24CS033_PES2UG24CS056_PES2UG24CS037_SAD.pdf):
