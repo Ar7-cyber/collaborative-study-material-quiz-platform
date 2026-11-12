@@ -133,6 +133,15 @@ jobs:
         with:
           name: csqp-production-bundle
 
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install Runtime Dependencies
+        run: npm ci --omit=dev
+
       - name: Extract Staging Bundle
         run: |
           tar -xzf csqp-release-v1.0.tar.gz
