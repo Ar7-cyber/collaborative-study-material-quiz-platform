@@ -43,6 +43,14 @@ router.get('/:id', authenticate, (req, res) => {
         if (!material) {
             return res.status(404).json({ error: 'Study material not found' });
         }
+
+        // Attach reading metrics for text/markdown study notes
+        if (material.content_type === 'NOTE' && material.content) {
+            const wordCount = material.content.trim().split(/\s+/).filter(Boolean).length;
+            material.reading_time_minutes = Math.max(1, Math.ceil(wordCount / 200));
+            material.word_count = wordCount;
+        }
+
         res.json({ material });
     } catch (err) {
         res.status(500).json({ error: err.message });
