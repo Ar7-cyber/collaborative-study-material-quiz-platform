@@ -65,7 +65,12 @@ const MaterialView = {
                 </div>
             `;
         } else {
+            const wordCount = (m.content || '').trim().split(/\s+/).filter(Boolean).length;
+            const readTimeMin = Math.max(1, Math.ceil(wordCount / 200));
             bodyContent = `
+                <div style="font-size: 0.82rem; color: var(--text-muted); margin-bottom: 0.75rem;">
+                    📖 ${wordCount} words • ~${readTimeMin} min read
+                </div>
                 <div class="content-viewer">${m.content}</div>
                 <div style="text-align: right; margin-top: 0.5rem;">
                     <a href="/api/materials/${m.id}/download" class="btn btn-outline btn-sm">
