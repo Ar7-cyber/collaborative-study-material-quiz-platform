@@ -154,9 +154,116 @@ LIMIT 50;
 
 ---
 
-## 6. Verification & Automated Test Traceability
+## 6. Complete REST API Specifications & Contracts
 
-All Quiz Engine features are covered by dedicated automated test suites in `tests/quiz_engine.test.js`:
+### 6.1 `POST /api/quizzes` (Create Assessment)
+- **Role Requirement:** `Content Contributor / Quiz Creator` or `Administrator`.
+- **Request Headers:** `Content-Type: application/json`, `Cookie: session_id=<UUID>`.
+- **Request Payload Schema:**
+  ```json
+  {
+    "title": "Data Structures Diagnostic Midterm",
+    "description": "Comprehensive review of heaps, binary search trees and hash tables",
+    "subject_id": 1,
+    "topic_id": 2,
+    "duration_minutes": 25,
+    "randomize_questions": 1,
+    "instant_results": 1,
+    "questions": [
+      {
+        "type": "MCQ",
+        "question": "What is the worst-case lookup time in a balanced AVL tree?",
+        "options": ["O(1)", "O(log n)", "O(n)", "O(n log n)"],
+        "correct_answer": "O(log n)",
+        "points": 2
+      },
+      {
+        "type": "TRUE_FALSE",
+        "question": "A min-heap always satisfies the property that every child is greater than or equal to its parent.",
+        "correct_answer": "True",
+        "points": 1
+      }
+    ]
+  }
+  ```
+- **Response `201 Created`:**
+  ```json
+  {
+    "message": "Quiz created successfully",
+    "quiz": { "id": 14, "title": "Data Structures Diagnostic Midterm" }
+  }
+  ```
+
+### 6.2 `GET /api/quizzes/:id/attempt` (Retrieve Exam Paper)
+- **Role Requirement:** Authenticated User (`Student/User`).
+- **Response `200 OK`:**
+  ```json
+  {
+    "id": 14,
+    "title": "Data Structures Diagnostic Midterm",
+    "duration_minutes": 25,
+    "questions": [
+      {
+        "id": 45,
+        "question_text": "What is the worst-case lookup time in a balanced AVL tree?",
+        "question_type": "MCQ",
+        "options": ["O(1)", "O(log n)", "O(n)", "O(n log n)"],
+        "points": 2
+      }
+    ]
+  }
+  ```
+
+### 6.3 `POST /api/quizzes/:id/submit` (Submit & Auto-Evaluate)
+- **Role Requirement:** Authenticated User (`Student/User`).
+- **Request Payload Schema:**
+  ```json
+  {
+    "answers": {
+      "45": "O(log n)",
+      "46": "True"
+    },
+    "time_taken_seconds": 380
+  }
+  ```
+- **Response `200 OK`:**
+  ```json
+  {
+    "attempt_id": 89,
+    "quiz_id": 14,
+    "score": 3,
+    "max_score": 3,
+    "percentage": 100.0,
+    "time_taken_seconds": 380,
+    "instant_results": true,
+    "breakdown": [
+      {
+        "question_id": 45,
+        "is_correct": true,
+        "points_awarded": 2,
+        "max_points": 2
+      }
+    ]
+  }
+  ```
+
+---
+
+## 7. Edge-Case Analysis & Defensive Engineering
+
+| Edge Case Scenario | Potential Failure Mode | Implemented Defensive Handling |
+|---|---|---|
+| **Zero Answer Submission** | User submits empty `{ answers: {} }` | Server processes 0 points without null-pointer crashes (`TC-QZ-03`). |
+| **Negative Time Submitted** | Client submits `time_taken_seconds: -100` | Normalized via `Math.max(0, Number(time_taken_seconds))`. |
+| **Non-Existent Question ID** | Submission contains foreign question ID | Query evaluates strictly against `WHERE quiz_id = ?`; unlinked keys are ignored. |
+| **Simultaneous Submissions** | Multiple concurrent students submit at the exact same millisecond | SQLite WAL mode serializes writes without blocking read transactions. |
+| **String Whitespace Mismatch** | Fill-in-the-blank answer has leading/trailing spaces | Normalized via `.trim().toLowerCase()` on both stored key and student submission. |
+
+---
+
+## 8. Verification & Automated Test Traceability
+
+All Quiz Engine features are covered by dedicated automated test suites in `tests/quiz_engine.test.js` and `tests/quiz_stress_benchmark.test.js`:
 - **`TC-QZ-01`:** Boundary checks on creation parameters (empty titles, missing questions).
 - **`TC-QZ-02`:** Deep verification of answer redaction across all question types.
 - **`TC-QZ-03`:** Heterogeneous scoring accuracy across mixed test papers.
@@ -164,3 +271,5 @@ All Quiz Engine features are covered by dedicated automated test suites in `test
 - **`TC-QZ-05`:** Leaderboard tie-breaker correctness.
 - **`TC-QZ-06`:** Historical student attempt archive persistence.
 - **`TC-QZ-07`:** Topic and subject filtering.
+- **`TC-PERF-QZ-01`:** 100 sequential quiz evaluations throughput benchmark ($< 1\text{ ms}$ mean).
+- **`TC-PERF-QZ-02`:** Leaderboard query latency under load ($< 5\text{ ms}$).

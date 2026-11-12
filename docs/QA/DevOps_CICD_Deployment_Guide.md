@@ -12,7 +12,7 @@
 The Collaborative Study Material & Quiz Platform (CSQP) implements an automated, multi-stage **Continuous Integration and Continuous Deployment (CI/CD)** pipeline powered by GitHub Actions. 
 
 The primary objectives of the CI/CD subsystem are:
-1. **Automated Quality Enforcement:** Ensure that every commit on `main` and all `feature/**` branches compiles without syntax errors and passes 100% of the 35 automated test cases before reaching production.
+1. **Automated Quality Enforcement:** Ensure that every commit on `main` and all `feature/**` branches compiles without syntax errors and passes 100% of the 37 automated test cases before reaching production.
 2. **Deterministic Builds:** Standardize runtime dependency installations across developer environments and CI workers using `npm ci`.
 3. **Multi-Version Runtime Matrix:** Validate compatibility across supported Node.js Long Term Support (LTS) releases (Node 18 and Node 20).
 4. **Automated Release Artifact Packaging:** Produce self-contained, standalone production tarball bundles (`csqp-release-v1.0.tar.gz`) containing all application layers and production dependencies.
@@ -37,7 +37,7 @@ The pipeline architecture is composed of four distinct sequential stages:
 |         ▼                                                                   |
 |  [Stage 2: Automated Quality Test Matrix] (All Branches)                    |
 |  ├─ Matrix execution: Node.js 18 & Node.js 20                               |
-|  ├─ 35 Automated Integration Tests (`npm test`)                             |
+|  ├─ 37 Automated Integration Tests (`npm test`)                             |
 |  ├─ Latency benchmark check (≤ 3000ms threshold)                           |
 |  └─ Export Executive Summary Table to `$GITHUB_STEP_SUMMARY`                |
 |         │                                                                   |
@@ -73,7 +73,7 @@ The pipeline architecture is composed of four distinct sequential stages:
 - **Matrix Strategy:** Executes parallel jobs across `node-version: [18, 20]`.
 - **Tasks Performed:**
   - Boots isolated SQLite test database with in-memory execution.
-  - Runs all 35 test cases spanning Authentication, RBAC, Study Material CRUD, Path Traversal, Quiz Engine, and SHA-256 Audit Chaining.
+  - Runs all 37 test cases spanning Authentication, RBAC, Study Material CRUD, Path Traversal, Quiz Engine, and SHA-256 Audit Chaining.
   - Generates comprehensive architectural validation checklist via `./scripts/ci/generate_summary.sh test` with `if: always()` condition to guarantee report generation even during failures.
 
 ### 3.3 Stage 3: Build & Package Production Release (`build_and_package`)
@@ -127,8 +127,19 @@ To provide full visibility for grading evaluations, the pipeline uses a custom s
 
 ---
 
-## 6. DevOps Best Practices & Maintenance
+## 6. Enterprise Troubleshooting & Failure Mode Recovery
 
-1. **Deterministic Dependency Resolution:** Always commit `package-lock.json` and use `npm ci` rather than `npm install` to avoid unpredictable sub-dependency drift.
-2. **Isolated Test Environments:** Set `NODE_ENV=test` during testing so `server.js` exports the app without binding physical network sockets.
-3. **Artifact Completeness:** When packaging tarballs for release, ensure production `node_modules` are bundled so deployment environments do not require outbound internet access to run.
+| Failure Symptom | Probable Root Cause | Verification Command | Permanent Solution |
+|---|---|---|---|
+| `chmod: cannot access './.github/scripts/generate_summary.sh'` | Script placed under `scripts/ci/` instead of `.github/scripts/` | `ls -la scripts/ci/` | Correct path to `./scripts/ci/generate_summary.sh` |
+| `Health check failed after 10 attempts on port 3001` | Server started with `NODE_ENV=test` which prevents socket binding | `grep -n "listen" server.js` | Boot with `PORT=3001 node server.js &` (production/dev mode) |
+| `Cannot find module 'express'` in staging | Release artifact missing `node_modules` directory | `tar -ztvf csqp-release-v1.0.tar.gz \| grep express` | Bundle `node_modules` during `cp -r` step |
+| `better-sqlite3 compilation error on Node 18` | Missing prebuilt binary for specific architecture | `node -v` | Pin runner runtime or install build essentials |
+
+---
+
+## 7. Security Hardening & Zero-Trust Secrets Management
+
+1. **Least-Privilege Token Permissions:** The workflow runs with read-only repository permissions by default; write permissions are restricted strictly to artifact uploading.
+2. **Air-Gapped Deployment Bundles:** The generated `.tar.gz` archive contains all necessary vendor dependencies (`node_modules`), allowing deployment to air-gapped intranet servers without internet egress.
+3. **Audit Trail Immutability:** Artifact hashes are computed and published in the step summary, providing cryptographic non-repudiation for university evaluators.
