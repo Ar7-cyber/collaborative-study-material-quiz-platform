@@ -144,6 +144,17 @@ const QuizApp = {
     },
 
     /**
+     * Formats a number of seconds as MM:SS (e.g. 125 -> "02:05").
+     * @param {number} totalSeconds
+     * @returns {string}
+     */
+    formatTime(totalSeconds) {
+        const mins = Math.floor(totalSeconds / 60);
+        const secs = totalSeconds % 60;
+        return `${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
+    },
+
+    /**
      * Starts the countdown; auto-submits the form when time runs out.
      * @param {number} seconds - total time allowed for the attempt
      */
@@ -155,9 +166,7 @@ const QuizApp = {
         const timerDisplay = document.getElementById('quiz-timer-display');
 
         const updateDisplay = () => {
-            const mins = Math.floor(this.secondsRemaining / 60);
-            const secs = this.secondsRemaining % 60;
-            timerDisplay.innerText = `⏳ Time Left: ${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+            timerDisplay.innerText = `⏳ Time Left: ${this.formatTime(this.secondsRemaining)}`;
         };
 
         updateDisplay();
