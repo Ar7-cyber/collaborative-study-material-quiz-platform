@@ -1,14 +1,25 @@
+/**
+ * Client controller for the quiz page (quiz.html).
+ * Handles quiz listing, the timed attempt runner, instant results,
+ * the leaderboard and the user's attempt history.
+ */
 const QuizApp = {
-    currentQuiz: null,
-    timerInterval: null,
-    secondsRemaining: 0,
-    timeTakenSeconds: 0,
+    currentQuiz: null,      // quiz (with questions) currently being attempted
+    timerInterval: null,    // handle of the countdown setInterval
+    secondsRemaining: 0,    // seconds left on the countdown
+    timeTakenSeconds: 0,    // seconds elapsed, sent with the submission
 
+    /** Loads the quiz list and wires up the attempt form submit handler. */
     async init() {
         await this.loadQuizzes();
         this.setupAttemptForm();
     },
 
+    /**
+     * Shows one section of the page and hides the others.
+     * Also stops any running quiz timer and refreshes the tab's data.
+     * @param {string} tab - quizzes | active-quiz | results | leaderboard | history
+     */
     switchTab(tab) {
         clearInterval(this.timerInterval);
         ['quizzes', 'active-quiz', 'results', 'leaderboard', 'history'].forEach(s => {
@@ -32,6 +43,7 @@ const QuizApp = {
         if (tab === 'history') this.loadHistory();
     },
 
+    /** Fetches published quizzes and renders them as cards. */
     async loadQuizzes() {
         const grid = document.getElementById('quizzes-grid');
         grid.innerHTML = '<p style="color: var(--text-muted);">Loading quizzes...</p>';
@@ -67,6 +79,11 @@ const QuizApp = {
         }
     },
 
+    /**
+     * Loads a quiz's questions and starts the timed attempt.
+     * Redirects to the login page if the user is not signed in.
+     * @param {number} quizId
+     */
     async startQuiz(quizId) {
         if (!App.currentUser) {
             App.showToast('Please log in before starting a quiz attempt', 'danger');
@@ -92,6 +109,7 @@ const QuizApp = {
         }
     },
 
+    /** Renders MCQ, TRUE_FALSE and FILL_BLANK questions into the attempt form. */
     renderQuestions(questions) {
         const container = document.getElementById('questions-container');
         container.innerHTML = questions.map((q, idx) => {
@@ -125,6 +143,10 @@ const QuizApp = {
         }).join('');
     },
 
+    /**
+     * Starts the countdown; auto-submits the form when time runs out.
+     * @param {number} seconds - total time allowed for the attempt
+     */
     startTimer(seconds) {
         clearInterval(this.timerInterval);
         this.secondsRemaining = seconds;
@@ -153,6 +175,7 @@ const QuizApp = {
         }, 1000);
     },
 
+    /** Collects answers on submit and posts them for server-side scoring. */
     setupAttemptForm() {
         const form = document.getElementById('quiz-attempt-form');
         form.addEventListener('submit', async (e) => {
@@ -189,6 +212,7 @@ const QuizApp = {
         });
     },
 
+    /** Displays the score summary and per-question breakdown after submission. */
     showResults(result) {
         this.switchTab('results');
         document.getElementById('result-score').innerText = `${result.score} / ${result.max_score}`;
@@ -219,6 +243,7 @@ const QuizApp = {
         }
     },
 
+    /** Fetches and renders the ranked leaderboard table. */
     async loadLeaderboard() {
         const body = document.getElementById('leaderboard-body');
         body.innerHTML = '<tr><td colspan="6" style="text-align: center;">Loading rankings...</td></tr>';
@@ -248,6 +273,7 @@ const QuizApp = {
         }
     },
 
+    /** Fetches and renders the signed-in user's past quiz attempts. */
     async loadHistory() {
         const body = document.getElementById('history-body');
         if (!App.currentUser) {
