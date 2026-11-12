@@ -44,6 +44,18 @@ const App = {
         }
     },
 
+    /**
+     * Escapes HTML special characters so server-provided text can be
+     * safely interpolated into innerHTML templates.
+     * @param {*} value
+     * @returns {string}
+     */
+    escapeHtml(value) {
+        return String(value ?? '').replace(/[&<>"']/g, ch => ({
+            '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+        }[ch]));
+    },
+
     getRoleShort(role) {
         if (role === 'Administrator') return 'Admin';
         if (role === 'Content Contributor / Quiz Creator') return 'Contributor';
