@@ -22,11 +22,13 @@ router.get('/hierarchy', (req, res) => {
 router.get('/', (req, res) => {
     try {
         const { search, subject_id, topic_id, contributor } = req.query;
+        const sanitizedSearch = typeof search === 'string' ? search.trim().slice(0, 100) : '';
+        const sanitizedContributor = typeof contributor === 'string' ? contributor.trim().slice(0, 50) : '';
         const materials = materialService.searchMaterials({
-            search,
+            search: sanitizedSearch,
             subject_id,
             topic_id,
-            contributor
+            contributor: sanitizedContributor
         });
         res.json({ materials, count: materials.length });
     } catch (err) {
