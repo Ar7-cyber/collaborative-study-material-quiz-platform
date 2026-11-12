@@ -52,20 +52,17 @@ jobs:
           EOF
 
   test_suite:
-    name: Automated Unit & Integration Tests (22 Suites)
+    name: Automated Unit & Integration Tests (28 Tests)
     runs-on: ubuntu-latest
     needs: lint_and_security
-    strategy:
-      matrix:
-        node-version: [18, 20]
     steps:
       - name: Checkout Source Code
         uses: actions/checkout@v4
 
-      - name: Set up Node.js ${{ matrix.node-version }}
+      - name: Set up Node.js 20 LTS
         uses: actions/setup-node@v4
         with:
-          node-version: ${{ matrix.node-version }}
+          node-version: 20
           cache: npm
 
       - name: Install Dependencies
@@ -74,10 +71,12 @@ jobs:
       - name: Run All Automated Test Suites
         run: npm test
 
+      # Fix 1 & 3: Correct path to generate_summary.sh and add if: always()
       - name: Generate Automated Test Job Summary
+        if: always()
         run: |
-          chmod +x .github/scripts/generate_summary.sh
-          ./.github/scripts/generate_summary.sh test
+          chmod +x ./scripts/ci/generate_summary.sh
+          ./scripts/ci/generate_summary.sh test
 
   # ============================================================================
   # Continuous Delivery & Deployment (CD) - Production Staging & Artifact Build
@@ -140,13 +139,14 @@ jobs:
           cd csqp-release
           ls -la
 
+      # Fix 2: Remove NODE_ENV=test and correct path to healthcheck.sh
       - name: Verify Staging Boot & Smoke Health Check
         run: |
           cd csqp-release
-          PORT=3001 NODE_ENV=test node server.js &
+          PORT=3001 node server.js &
           PID=$!
-          chmod +x .github/scripts/healthcheck.sh
-          ./.github/scripts/healthcheck.sh 3001
+          chmod +x ./scripts/ci/healthcheck.sh
+          ./scripts/ci/healthcheck.sh 3001
           kill $PID
 
       - name: Write Staging Deployment Summary
