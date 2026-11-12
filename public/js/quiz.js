@@ -62,14 +62,14 @@ const QuizApp = {
                 <div class="material-card">
                     <div>
                         <span class="card-badge badge-doc">⏱️ ${q.duration_minutes} Mins • ${q.question_count} Questions</span>
-                        <h3 class="card-title">${q.title}</h3>
-                        <p class="card-desc">${q.description || 'No description provided.'}</p>
+                        <h3 class="card-title">${App.escapeHtml(q.title)}</h3>
+                        <p class="card-desc">${App.escapeHtml(q.description || 'No description provided.')}</p>
                         <div style="font-size: 0.85rem; color: var(--primary); font-weight: 600; margin-bottom: 0.75rem;">
-                            📖 ${q.subject_name} &rsaquo; ${q.topic_name}
+                            📖 ${App.escapeHtml(q.subject_name)} &rsaquo; ${App.escapeHtml(q.topic_name)}
                         </div>
                     </div>
                     <div style="border-top: 1px solid var(--border); padding-top: 1rem; display: flex; justify-content: space-between; align-items: center;">
-                        <span style="font-size: 0.8rem; color: var(--text-muted);">By: ${q.creator_name}</span>
+                        <span style="font-size: 0.8rem; color: var(--text-muted);">By: ${App.escapeHtml(q.creator_name)}</span>
                         <button class="btn btn-primary btn-sm" onclick="QuizApp.startQuiz(${q.id})">Start Quiz</button>
                     </div>
                 </div>
@@ -119,8 +119,8 @@ const QuizApp = {
                 const options = q.options || (q.question_type === 'TRUE_FALSE' ? ['True', 'False'] : []);
                 inputArea = options.map(opt => `
                     <label class="option-label">
-                        <input type="radio" name="question_${q.id}" value="${opt}" required>
-                        <span>${opt}</span>
+                        <input type="radio" name="question_${q.id}" value="${App.escapeHtml(opt)}" required>
+                        <span>${App.escapeHtml(opt)}</span>
                     </label>
                 `).join('');
             } else {
@@ -136,7 +136,7 @@ const QuizApp = {
                         <span style="font-weight: 700; color: var(--primary);">Question ${idx + 1}</span>
                         <span style="font-size: 0.8rem; color: var(--text-muted);">${q.points} Point${q.points > 1 ? 's' : ''} • [${q.question_type}]</span>
                     </div>
-                    <p style="font-size: 1.05rem; font-weight: 600; margin-bottom: 1rem;">${q.question_text}</p>
+                    <p style="font-size: 1.05rem; font-weight: 600; margin-bottom: 1rem;">${App.escapeHtml(q.question_text)}</p>
                     ${inputArea}
                 </div>
             `;
@@ -240,10 +240,10 @@ const QuizApp = {
                             <span>${item.is_correct ? '✅ Correct (+'+item.points_awarded+' pts)' : '❌ Incorrect (0 pts)'}</span>
                             <span>[${item.question_type}]</span>
                         </div>
-                        <p style="font-weight: 600; margin: 0.35rem 0;">${item.question_text}</p>
+                        <p style="font-weight: 600; margin: 0.35rem 0;">${App.escapeHtml(item.question_text)}</p>
                         <div style="font-size: 0.85rem; color: var(--text-muted);">
-                            <span>Your Answer: <strong>${item.submitted_answer || '(Blank)'}</strong></span> |
-                            <span>Correct Answer: <strong>${item.correct_answer}</strong></span>
+                            <span>Your Answer: <strong>${App.escapeHtml(item.submitted_answer || '(Blank)')}</strong></span> |
+                            <span>Correct Answer: <strong>${App.escapeHtml(item.correct_answer)}</strong></span>
                         </div>
                     </div>
                 `).join('');
@@ -270,8 +270,8 @@ const QuizApp = {
             body.innerHTML = list.map(item => `
                 <tr>
                     <td style="font-weight: 700; color: var(--primary);">#${item.rank}</td>
-                    <td><strong>${item.username}</strong></td>
-                    <td>${item.quiz_title}</td>
+                    <td><strong>${App.escapeHtml(item.username)}</strong></td>
+                    <td>${App.escapeHtml(item.quiz_title)}</td>
                     <td>${item.score}/${item.max_score}</td>
                     <td><span style="font-weight: 600; color: var(--success);">${item.percentage}%</span></td>
                     <td>${item.time_taken_seconds}s</td>
@@ -304,8 +304,8 @@ const QuizApp = {
 
             body.innerHTML = list.map(item => `
                 <tr>
-                    <td><strong>${item.quiz_title}</strong></td>
-                    <td>${item.subject_name}</td>
+                    <td><strong>${App.escapeHtml(item.quiz_title)}</strong></td>
+                    <td>${App.escapeHtml(item.subject_name)}</td>
                     <td>${item.score}/${item.max_score}</td>
                     <td><span style="font-weight: 600;">${item.percentage}%</span></td>
                     <td>${item.time_taken_seconds}s</td>
