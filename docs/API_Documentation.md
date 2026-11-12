@@ -111,3 +111,11 @@ Submits a rating between 1 and 5 stars. Duplicate submissions update the user's 
 ### `POST /api/materials/:id/comments`
 Posts a discussion message to the material's chronological thread (`CSQP-F-010`).
 - **Request Body:** `{ "comment_text": "Excellent explanation of 3-tier pattern!" }`
+
+## Quiz Engine Endpoints (Authored by A Sheiman Joshi)
+- `POST /api/quizzes`: Create new quiz with questions (Contributor/Admin only)
+- `GET /api/quizzes`: List all published quizzes
+- `GET /api/quizzes/:id/attempt`: Retrieve randomized questions (correct answers stripped)
+- `POST /api/quizzes/:id/submit`: Server-side automated evaluation
+- `GET /api/quizzes/:id/leaderboard`: Dynamic ranked leaderboard
+- `GET /api/quizzes/user/history`: Completed student attempt archive
