@@ -1,14 +1,25 @@
+/**
+ * Client controller for the quiz page (quiz.html).
+ * Handles quiz listing, the timed attempt runner, instant results,
+ * the leaderboard and the user's attempt history.
+ */
 const QuizApp = {
-    currentQuiz: null,
-    timerInterval: null,
-    secondsRemaining: 0,
-    timeTakenSeconds: 0,
+    currentQuiz: null,      // quiz (with questions) currently being attempted
+    timerInterval: null,    // handle of the countdown setInterval
+    secondsRemaining: 0,    // seconds left on the countdown
+    timeTakenSeconds: 0,    // seconds elapsed, sent with the submission
 
+    /** Loads the quiz list and wires up the attempt form submit handler. */
     async init() {
         await this.loadQuizzes();
         this.setupAttemptForm();
     },
 
+    /**
+     * Shows one section of the page and hides the others.
+     * Also stops any running quiz timer and refreshes the tab's data.
+     * @param {string} tab - quizzes | active-quiz | results | leaderboard | history
+     */
     switchTab(tab) {
         clearInterval(this.timerInterval);
         ['quizzes', 'active-quiz', 'results', 'leaderboard', 'history'].forEach(s => {
@@ -32,6 +43,7 @@ const QuizApp = {
         if (tab === 'history') this.loadHistory();
     },
 
+    /** Fetches published quizzes and renders them as cards. */
     async loadQuizzes() {
         const grid = document.getElementById('quizzes-grid');
         grid.innerHTML = '<p style="color: var(--text-muted);">Loading quizzes...</p>';
@@ -50,14 +62,14 @@ const QuizApp = {
                 <div class="material-card">
                     <div>
                         <span class="card-badge badge-doc">⏱️ ${q.duration_minutes} Mins • ${q.question_count} Questions</span>
-                        <h3 class="card-title">${q.title}</h3>
-                        <p class="card-desc">${q.description || 'No description provided.'}</p>
+                        <h3 class="card-title">${App.escapeHtml(q.title)}</h3>
+                        <p class="card-desc">${App.escapeHtml(q.description || 'No description provided.')}</p>
                         <div style="font-size: 0.85rem; color: var(--primary); font-weight: 600; margin-bottom: 0.75rem;">
-                            📖 ${q.subject_name} &rsaquo; ${q.topic_name}
+                            📖 ${App.escapeHtml(q.subject_name)} &rsaquo; ${App.escapeHtml(q.topic_name)}
                         </div>
                     </div>
                     <div style="border-top: 1px solid var(--border); padding-top: 1rem; display: flex; justify-content: space-between; align-items: center;">
-                        <span style="font-size: 0.8rem; color: var(--text-muted);">By: ${q.creator_name}</span>
+                        <span style="font-size: 0.8rem; color: var(--text-muted);">By: ${App.escapeHtml(q.creator_name)}</span>
                         <button class="btn btn-primary btn-sm" onclick="QuizApp.startQuiz(${q.id})">Start Quiz</button>
                     </div>
                 </div>
@@ -67,6 +79,11 @@ const QuizApp = {
         }
     },
 
+    /**
+     * Loads a quiz's questions and starts the timed attempt.
+     * Redirects to the login page if the user is not signed in.
+     * @param {number} quizId
+     */
     async startQuiz(quizId) {
         if (!App.currentUser) {
             App.showToast('Please log in before starting a quiz attempt', 'danger');
@@ -92,6 +109,7 @@ const QuizApp = {
         }
     },
 
+    /** Renders MCQ, TRUE_FALSE and FILL_BLANK questions into the attempt form. */
     renderQuestions(questions) {
         const container = document.getElementById('questions-container');
         container.innerHTML = questions.map((q, idx) => {
@@ -101,8 +119,8 @@ const QuizApp = {
                 const options = q.options || (q.question_type === 'TRUE_FALSE' ? ['True', 'False'] : []);
                 inputArea = options.map(opt => `
                     <label class="option-label">
-                        <input type="radio" name="question_${q.id}" value="${opt}" required>
-                        <span>${opt}</span>
+                        <input type="radio" name="question_${q.id}" value="${App.escapeHtml(opt)}" required>
+                        <span>${App.escapeHtml(opt)}</span>
                     </label>
                 `).join('');
             } else {
@@ -118,13 +136,28 @@ const QuizApp = {
                         <span style="font-weight: 700; color: var(--primary);">Question ${idx + 1}</span>
                         <span style="font-size: 0.8rem; color: var(--text-muted);">${q.points} Point${q.points > 1 ? 's' : ''} • [${q.question_type}]</span>
                     </div>
-                    <p style="font-size: 1.05rem; font-weight: 600; margin-bottom: 1rem;">${q.question_text}</p>
+                    <p style="font-size: 1.05rem; font-weight: 600; margin-bottom: 1rem;">${App.escapeHtml(q.question_text)}</p>
                     ${inputArea}
                 </div>
             `;
         }).join('');
     },
 
+    /**
+     * Formats a number of seconds as MM:SS (e.g. 125 -> "02:05").
+     * @param {number} totalSeconds
+     * @returns {string}
+     */
+    formatTime(totalSeconds) {
+        const mins = Math.floor(totalSeconds / 60);
+        const secs = totalSeconds % 60;
+        return `${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
+    },
+
+    /**
+     * Starts the countdown; auto-submits the form when time runs out.
+     * @param {number} seconds - total time allowed for the attempt
+     */
     startTimer(seconds) {
         clearInterval(this.timerInterval);
         this.secondsRemaining = seconds;
@@ -133,9 +166,7 @@ const QuizApp = {
         const timerDisplay = document.getElementById('quiz-timer-display');
 
         const updateDisplay = () => {
-            const mins = Math.floor(this.secondsRemaining / 60);
-            const secs = this.secondsRemaining % 60;
-            timerDisplay.innerText = `⏳ Time Left: ${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+            timerDisplay.innerText = `⏳ Time Left: ${this.formatTime(this.secondsRemaining)}`;
         };
 
         updateDisplay();
@@ -153,6 +184,7 @@ const QuizApp = {
         }, 1000);
     },
 
+    /** Collects answers on submit and posts them for server-side scoring. */
     setupAttemptForm() {
         const form = document.getElementById('quiz-attempt-form');
         form.addEventListener('submit', async (e) => {
@@ -189,6 +221,7 @@ const QuizApp = {
         });
     },
 
+    /** Displays the score summary and per-question breakdown after submission. */
     showResults(result) {
         this.switchTab('results');
         document.getElementById('result-score').innerText = `${result.score} / ${result.max_score}`;
@@ -207,10 +240,10 @@ const QuizApp = {
                             <span>${item.is_correct ? '✅ Correct (+'+item.points_awarded+' pts)' : '❌ Incorrect (0 pts)'}</span>
                             <span>[${item.question_type}]</span>
                         </div>
-                        <p style="font-weight: 600; margin: 0.35rem 0;">${item.question_text}</p>
+                        <p style="font-weight: 600; margin: 0.35rem 0;">${App.escapeHtml(item.question_text)}</p>
                         <div style="font-size: 0.85rem; color: var(--text-muted);">
-                            <span>Your Answer: <strong>${item.submitted_answer || '(Blank)'}</strong></span> |
-                            <span>Correct Answer: <strong>${item.correct_answer}</strong></span>
+                            <span>Your Answer: <strong>${App.escapeHtml(item.submitted_answer || '(Blank)')}</strong></span> |
+                            <span>Correct Answer: <strong>${App.escapeHtml(item.correct_answer)}</strong></span>
                         </div>
                     </div>
                 `).join('');
@@ -219,6 +252,7 @@ const QuizApp = {
         }
     },
 
+    /** Fetches and renders the ranked leaderboard table. */
     async loadLeaderboard() {
         const body = document.getElementById('leaderboard-body');
         body.innerHTML = '<tr><td colspan="6" style="text-align: center;">Loading rankings...</td></tr>';
@@ -236,8 +270,8 @@ const QuizApp = {
             body.innerHTML = list.map(item => `
                 <tr>
                     <td style="font-weight: 700; color: var(--primary);">#${item.rank}</td>
-                    <td><strong>${item.username}</strong></td>
-                    <td>${item.quiz_title}</td>
+                    <td><strong>${App.escapeHtml(item.username)}</strong></td>
+                    <td>${App.escapeHtml(item.quiz_title)}</td>
                     <td>${item.score}/${item.max_score}</td>
                     <td><span style="font-weight: 600; color: var(--success);">${item.percentage}%</span></td>
                     <td>${item.time_taken_seconds}s</td>
@@ -248,6 +282,7 @@ const QuizApp = {
         }
     },
 
+    /** Fetches and renders the signed-in user's past quiz attempts. */
     async loadHistory() {
         const body = document.getElementById('history-body');
         if (!App.currentUser) {
@@ -269,8 +304,8 @@ const QuizApp = {
 
             body.innerHTML = list.map(item => `
                 <tr>
-                    <td><strong>${item.quiz_title}</strong></td>
-                    <td>${item.subject_name}</td>
+                    <td><strong>${App.escapeHtml(item.quiz_title)}</strong></td>
+                    <td>${App.escapeHtml(item.subject_name)}</td>
                     <td>${item.score}/${item.max_score}</td>
                     <td><span style="font-weight: 600;">${item.percentage}%</span></td>
                     <td>${item.time_taken_seconds}s</td>
