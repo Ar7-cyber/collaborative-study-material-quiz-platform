@@ -55,7 +55,7 @@ jobs:
           EOF
 
   test_suite:
-    name: Automated Unit & Integration Tests (43 Tests across 7 Suites)
+    name: Automated Unit & Integration Tests (46 Tests across 8 Suites)
     runs-on: ubuntu-latest
     needs: lint_and_security
     steps:
@@ -153,27 +153,9 @@ jobs:
           cd csqp-release
           PORT=3001 node server.js &
           PID=$!
-          if [ -f ./scripts/ci/healthcheck.sh ]; then
-            chmod +x ./scripts/ci/healthcheck.sh
-            ./scripts/ci/healthcheck.sh 3001
-          elif [ -f ./ci/healthcheck.sh ]; then
-            chmod +x ./ci/healthcheck.sh
-            ./ci/healthcheck.sh 3001
-          else
-            echo "--> Pinging http://localhost:3001 for health check..."
-            COUNT=0
-            until curl -s -f -o /dev/null "http://localhost:3001" || [ $COUNT -eq 10 ]; do
-              echo "Waiting for CSQP server to start (attempt \$((COUNT+1))/10)..."
-              sleep 1
-              COUNT=\$((COUNT+1))
-            done
-            if [ \$COUNT -eq 10 ]; then
-              echo "❌ Health check failed after 10 attempts!"
-              exit 1
-            fi
-            echo "✅ Health check passed! Server is active on port 3001."
-          fi
-          kill \$PID
+          sleep 3
+          curl --retry 5 --retry-connrefused --retry-delay 1 -f http://localhost:3001/api/health
+          kill $PID
 
       - name: Write Staging Deployment Summary
         run: |
