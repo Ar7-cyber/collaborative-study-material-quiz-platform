@@ -68,6 +68,8 @@ const App = {
             container = document.createElement('div');
             container.id = 'toast-container';
             container.className = 'toast-container';
+            container.setAttribute('role', 'status');
+            container.setAttribute('aria-live', 'polite');
             document.body.appendChild(container);
         }
 
