@@ -30,7 +30,8 @@ data/*
 
 # Personal & local submission helper artifacts (not part of git requirements)
 *.zip
-scripts/
+/scripts/*
+!/scripts/ci/
 *Viva*
 *viva*
 /*.pdf

@@ -8,6 +8,7 @@ on:
   pull_request:
     branches:
       - main
+  workflow_dispatch:
 
 jobs:
   # ============================================================================
@@ -52,7 +53,7 @@ jobs:
           EOF
 
   test_suite:
-    name: Automated Unit & Integration Tests (28 Tests)
+    name: Automated Unit & Integration Tests (37 Tests across 6 Suites)
     runs-on: ubuntu-latest
     needs: lint_and_security
     steps:
