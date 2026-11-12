@@ -55,7 +55,7 @@ jobs:
           EOF
 
   test_suite:
-    name: Automated Unit & Integration Tests (49 Tests across 9 Suites)
+    name: Automated Unit & Integration Tests (51 Tests across 10 Suites)
     runs-on: ubuntu-latest
     needs: lint_and_security
     steps:
