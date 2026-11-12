@@ -20,7 +20,17 @@ class VersionService {
 
         // Get latest version number
         const latest = db.prepare('SELECT MAX(version_number) as max_v FROM material_versions WHERE material_id = ?').get(materialId);
-        const nextVersion = (latest && latest.max_v ? latest.max_v : 1) + 1;
+        let nextVersion = 2;
+        if (!latest || !latest.max_v) {
+            // Preserve initial base version snapshot (v1) before first collaborative revision
+            db.prepare(`
+                INSERT INTO material_versions (material_id, version_number, title, content, contributor_id, change_summary)
+                VALUES (?, 1, ?, ?, ?, 'Initial document creation')
+            `).run(materialId, material.title, material.content, material.contributor_id);
+            nextVersion = 2;
+        } else {
+            nextVersion = latest.max_v + 1;
+        }
 
         const newTitle = (title && title.trim()) ? title.trim() : material.title;
         const newContent = content !== undefined ? content : material.content;
