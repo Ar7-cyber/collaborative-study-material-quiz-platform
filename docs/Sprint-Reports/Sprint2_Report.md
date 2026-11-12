@@ -77,3 +77,11 @@ The objective of Sprint 2 is to complete all advanced collaborative, assessment,
 4. **[1:40 - 2:00] Admin Console & Audit Logging:**
    - Log in as `admin_user` / `Admin@1234`.
    - Navigate to `/admin.html`. Show user role management, account status toggles, and live audit logging without plaintext passwords (`CSQP-F-020..022`).
+
+---
+
+### QA Acceptance & Release Sign-off (A Sheiman Joshi)
+- Quiz Engine API: PASS
+- Question Randomization: PASS
+- Server-Side Auto-Evaluation: PASS
+- Tamper-proof Audit Logging: PASS
