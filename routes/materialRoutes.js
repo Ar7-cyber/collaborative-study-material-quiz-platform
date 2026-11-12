@@ -4,6 +4,7 @@ const path = require('path');
 const fs = require('fs');
 const materialService = require('../services/materialService');
 const versionService = require('../services/versionService');
+const adminService = require('../services/adminService');
 const { requireAuth, requireRole, authenticate } = require('../middleware/auth');
 const { upload } = require('../middleware/upload');
 
@@ -21,11 +22,13 @@ router.get('/hierarchy', (req, res) => {
 router.get('/', (req, res) => {
     try {
         const { search, subject_id, topic_id, contributor } = req.query;
+        const sanitizedSearch = typeof search === 'string' ? search.trim().slice(0, 100) : '';
+        const sanitizedContributor = typeof contributor === 'string' ? contributor.trim().slice(0, 50) : '';
         const materials = materialService.searchMaterials({
-            search,
+            search: sanitizedSearch,
             subject_id,
             topic_id,
-            contributor
+            contributor: sanitizedContributor
         });
         res.json({ materials, count: materials.length });
     } catch (err) {
@@ -40,6 +43,14 @@ router.get('/:id', authenticate, (req, res) => {
         if (!material) {
             return res.status(404).json({ error: 'Study material not found' });
         }
+
+        // Attach reading metrics for text/markdown study notes
+        if (material.content_type === 'NOTE' && material.content) {
+            const wordCount = material.content.trim().split(/\s+/).filter(Boolean).length;
+            material.reading_time_minutes = Math.max(1, Math.ceil(wordCount / 200));
+            material.word_count = wordCount;
+        }
+
         res.json({ material });
     } catch (err) {
         res.status(500).json({ error: err.message });
@@ -55,8 +66,9 @@ router.get('/:id/download', authenticate, (req, res) => {
         }
 
         if (material.content_type === 'DOCUMENT') {
-            const filePath = path.join(__dirname, '..', 'uploads', material.file_path);
-            if (!fs.existsSync(filePath)) {
+            const uploadsDir = path.resolve(__dirname, '..', 'uploads');
+            const filePath = path.resolve(uploadsDir, material.file_path);
+            if (!filePath.startsWith(uploadsDir) || !fs.existsSync(filePath)) {
                 return res.status(404).json({ error: 'Stored document file not found on server' });
             }
             res.setHeader('Content-Disposition', `attachment; filename="${material.file_name}"`);
@@ -183,6 +195,21 @@ router.post('/:id/comments', requireAuth, (req, res) => {
     } catch (err) {
         res.status(400).json({ error: err.message });
     }
+});
+
+// CSQP-AM-06: Authenticated users can flag materials and comments for review.
+router.post('/:id/flag', requireAuth, (req, res) => {
+    try {
+        const result = adminService.flagMaterial(Number(req.params.id), req.user, req.body.reason);
+        res.status(201).json({ message: 'Material reported for moderation', ...result });
+    } catch (err) { res.status(400).json({ error: err.message }); }
+});
+
+router.post('/:materialId/comments/:commentId/flag', requireAuth, (req, res) => {
+    try {
+        const result = adminService.flagComment(Number(req.params.commentId), req.user, req.body.reason);
+        res.status(201).json({ message: 'Comment reported for moderation', ...result });
+    } catch (err) { res.status(400).json({ error: err.message }); }
 });
 
 // CSQP-F-011: Version History for Study Material (TC-MAT-09)

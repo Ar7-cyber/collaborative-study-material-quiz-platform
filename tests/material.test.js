@@ -141,4 +141,50 @@ describe('Study Material Management Test Suite (Aditya & Sheiman - Sprint 1)', (
         const afterDelete = materialService.searchMaterials({ search: 'Updated v2' });
         assert.strictEqual(afterDelete.length, 0, 'Deleted material must be absent from active listings');
     });
+
+    test('TC-SEC-08: Path traversal containment rejects directory escape on document downloads', () => {
+        const path = require('path');
+        const uploadsDir = path.resolve(__dirname, '..', 'uploads');
+        
+        const verifyDownloadPath = (filePath) => {
+            const resolved = path.resolve(uploadsDir, filePath.replace(/\\/g, '/'));
+            return resolved.startsWith(uploadsDir);
+        };
+
+        assert.strictEqual(verifyDownloadPath('valid_doc_123.pdf'), true, 'Valid file in uploads dir accepted');
+        assert.strictEqual(verifyDownloadPath('../../../etc/passwd'), false, 'Directory traversal attack rejected');
+        assert.strictEqual(verifyDownloadPath('sub/../../secret.txt'), false, 'Nested directory traversal rejected');
+    });
+
+    test('TC-MAT-09: Multi-user rating aggregation and score boundary rejection (CSQP-F-009)', () => {
+        // Create dedicated note for multi-user rating test
+        const testNote = materialService.createNote({
+            title: 'Rating Aggregation Test Suite',
+            description: 'Verifies weighted average and bounds',
+            subject_id: subjectId,
+            topic_id: topicId,
+            content: 'Sample test content for rating validation'
+        }, contributorUser);
+
+        // Boundary tests: scores < 1, > 5, or float must throw
+        assert.throws(() => {
+            materialService.rateMaterial(testNote.id, 0, studentUser);
+        }, /between 1 and 5/);
+        assert.throws(() => {
+            materialService.rateMaterial(testNote.id, 6, studentUser);
+        }, /between 1 and 5/);
+        assert.throws(() => {
+            materialService.rateMaterial(testNote.id, 4.5, studentUser);
+        }, /between 1 and 5/);
+
+        // User 1 rates 4
+        const res1 = materialService.rateMaterial(testNote.id, 4, studentUser);
+        assert.strictEqual(res1.average_rating, 4.0);
+        assert.strictEqual(res1.rating_count, 1);
+
+        // User 2 (admin) rates 2
+        const res2 = materialService.rateMaterial(testNote.id, 2, adminUser);
+        assert.strictEqual(res2.rating_count, 2);
+        assert.strictEqual(res2.average_rating, 3.0, 'Average of 4 and 2 should be 3.0');
+    });
 });

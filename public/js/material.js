@@ -65,7 +65,12 @@ const MaterialView = {
                 </div>
             `;
         } else {
+            const wordCount = (m.content || '').trim().split(/\s+/).filter(Boolean).length;
+            const readTimeMin = Math.max(1, Math.ceil(wordCount / 200));
             bodyContent = `
+                <div style="font-size: 0.82rem; color: var(--text-muted); margin-bottom: 0.75rem;">
+                    📖 ${wordCount} words • ~${readTimeMin} min read
+                </div>
                 <div class="content-viewer">${m.content}</div>
                 <div style="text-align: right; margin-top: 0.5rem;">
                     <a href="/api/materials/${m.id}/download" class="btn btn-outline btn-sm">
@@ -76,13 +81,12 @@ const MaterialView = {
         }
 
         let managementControls = '';
-        if (isOwnerOrAdmin) {
-            managementControls = `
-                <div style="display: flex; gap: 0.5rem;">
-                    <button class="btn btn-danger btn-sm" onclick="MaterialView.deleteMaterial()">Delete Resource</button>
-                </div>
-            `;
-        }
+        managementControls = `
+            <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+                ${isOwnerOrAdmin ? '<button class="btn btn-danger btn-sm" onclick="MaterialView.deleteMaterial()">Delete Resource</button>' : ''}
+                <button class="btn btn-outline btn-sm" onclick="MaterialView.flagMaterial()">Report Material</button>
+            </div>
+        `;
 
         box.innerHTML = `
             <div class="detail-header">
@@ -168,6 +172,7 @@ const MaterialView = {
                     <span>• ${new Date(c.created_at).toLocaleString()}</span>
                 </div>
                 <div style="font-size: 0.95rem; color: var(--text-main);">${c.comment_text}</div>
+                <button class="btn btn-outline btn-sm" style="margin-top:0.5rem" onclick="MaterialView.flagComment(${c.id})">Report Comment</button>
             </div>
         `).join('');
     },
@@ -207,6 +212,35 @@ const MaterialView = {
                 App.showToast('Network error posting comment', 'danger');
             }
         });
+    },
+
+    async flagMaterial() {
+        await this.submitFlag(`/api/materials/${this.materialId}/flag`, 'Material reported for review');
+    },
+
+    async flagComment(commentId) {
+        await this.submitFlag(`/api/materials/${this.materialId}/comments/${commentId}/flag`, 'Comment reported for review');
+    },
+
+    async submitFlag(url, successMessage) {
+        if (!App.currentUser) {
+            App.showToast('Please log in to report content', 'danger');
+            return;
+        }
+        const reason = prompt('Why are you reporting this content?');
+        if (reason === null) return;
+        try {
+            const res = await fetch(url, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ reason: reason.trim() || 'Inappropriate or policy-violating content' })
+            });
+            const data = await res.json();
+            if (!res.ok) throw new Error(data.error || 'Unable to submit report');
+            App.showToast(data.duplicate ? 'You have already reported this content' : successMessage, 'success');
+        } catch (err) {
+            App.showToast(err.message || 'Network error submitting report', 'danger');
+        }
     },
 
     async deleteMaterial() {

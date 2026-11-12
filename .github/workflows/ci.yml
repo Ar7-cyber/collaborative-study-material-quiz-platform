@@ -76,8 +76,8 @@ jobs:
 
       - name: Generate Automated Test Job Summary
         run: |
-          chmod +x scripts/ci/generate_summary.sh
-          ./scripts/ci/generate_summary.sh test
+          chmod +x .github/scripts/generate_summary.sh
+          ./.github/scripts/generate_summary.sh test
 
   # ============================================================================
   # Continuous Delivery & Deployment (CD) - Production Staging & Artifact Build
@@ -145,8 +145,8 @@ jobs:
           cd csqp-release
           PORT=3001 NODE_ENV=test node server.js &
           PID=$!
-          chmod +x scripts/ci/healthcheck.sh
-          ./scripts/ci/healthcheck.sh 3001
+          chmod +x .github/scripts/healthcheck.sh
+          ./.github/scripts/healthcheck.sh 3001
           kill $PID
 
       - name: Write Staging Deployment Summary

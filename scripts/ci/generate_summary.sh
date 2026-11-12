@@ -39,3 +39,4 @@ cat << EOF >> "${SUMMARY_FILE}"
 > **Zero Plaintext Security Policy:** All 22 automated integration test suites verify bcrypt hashing on registration, server-authoritative quiz score evaluations, and redacted audit logs.
 
 EOF
+

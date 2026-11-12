@@ -51,14 +51,29 @@
             </table>
         </div>
 
+        <!-- Content moderation queue (CSQP-AM-06) -->
+        <div class="detail-box" style="margin-bottom: 2rem;">
+            <div class="cards-header">
+                <div><h2 style="font-size: 1.25rem; font-weight: 700;">Content Moderation Queue</h2>
+                <span style="font-size: 0.85rem; color: var(--text-muted);">Review user-flagged study materials and comments</span></div>
+                <button class="btn btn-outline btn-sm" onclick="AdminApp.loadModeration()">Refresh Queue</button>
+            </div>
+            <h3>Flagged Materials</h3>
+            <table class="leaderboard-table"><thead><tr><th>ID</th><th>Material</th><th>Contributor</th><th>Reports</th><th>Actions</th></tr></thead>
+            <tbody id="flagged-materials-body"><tr><td colspan="5">Loading moderation queue...</td></tr></tbody></table>
+            <h3 style="margin-top:1.5rem;">Flagged Comments</h3>
+            <table class="leaderboard-table"><thead><tr><th>ID</th><th>Comment</th><th>Author</th><th>Reports</th><th>Actions</th></tr></thead>
+            <tbody id="flagged-comments-body"><tr><td colspan="5">Loading moderation queue...</td></tr></tbody></table>
+        </div>
+
         <!-- Section 2: Tamper-proof Audit Log Viewer (CSQP-F-022, TC-SEC-01) -->
         <div class="detail-box">
             <div class="cards-header">
                 <div>
                     <h2 style="font-size: 1.25rem; font-weight: 700;">Security & Administrative Audit Logs</h2>
-                    <span style="font-size: 0.85rem; color: var(--text-muted);">Timestamped immutable action history with zero plaintext passwords</span>
+                    <span id="audit-integrity-status" style="font-size: 0.85rem; color: var(--text-muted);">SHA-256 chained action history; passwords are never recorded</span>
                 </div>
-                <button class="btn btn-outline btn-sm" onclick="AdminApp.loadLogs()">Refresh Logs</button>
+                <div><button class="btn btn-outline btn-sm" onclick="AdminApp.verifyLogs()">Verify Integrity</button> <a class="btn btn-outline btn-sm" href="/api/admin/audit-logs/export">Export CSV</a> <button class="btn btn-outline btn-sm" onclick="AdminApp.loadLogs()">Refresh Logs</button></div>
             </div>
 
             <table class="leaderboard-table" style="font-size: 0.88rem;">

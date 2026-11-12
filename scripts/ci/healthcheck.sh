@@ -24,3 +24,4 @@ fi
 
 echo "✅ Health check passed! Server is active on port ${PORT}."
 exit 0
+
