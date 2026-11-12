@@ -528,6 +528,7 @@ textarea.form-control {
 
 .toast-success { background: var(--success); }
 .toast-danger { background: var(--danger); }
+.toast-warning { background: var(--warning); }
 .toast-info { background: var(--primary); }
 
 @keyframes fadeIn {

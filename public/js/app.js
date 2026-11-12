@@ -44,6 +44,18 @@ const App = {
         }
     },
 
+    /**
+     * Escapes HTML special characters so server-provided text can be
+     * safely interpolated into innerHTML templates.
+     * @param {*} value
+     * @returns {string}
+     */
+    escapeHtml(value) {
+        return String(value ?? '').replace(/[&<>"']/g, ch => ({
+            '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+        }[ch]));
+    },
+
     getRoleShort(role) {
         if (role === 'Administrator') return 'Admin';
         if (role === 'Content Contributor / Quiz Creator') return 'Contributor';
@@ -68,6 +80,8 @@ const App = {
             container = document.createElement('div');
             container.id = 'toast-container';
             container.className = 'toast-container';
+            container.setAttribute('role', 'status');
+            container.setAttribute('aria-live', 'polite');
             document.body.appendChild(container);
         }
 
