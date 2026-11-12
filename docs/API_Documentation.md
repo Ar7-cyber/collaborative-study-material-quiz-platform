@@ -381,3 +381,109 @@ Posts a peer discussion comment to the chronological discussion thread of a stud
 - **Error Responses:**
   - `400 Bad Request`: `{ "error": "Comment cannot be empty" }`.
   - `404 Not Found`: `{ "error": "Study material not found" }`.
+
+---
+
+## 8. Quiz Engine REST API Endpoints (Authored by A Sheiman Joshi)
+
+### `POST /api/quizzes`
+Creates and configures a new academic quiz with randomized question pools, duration constraints, and points weightage (`CSQP-F-013`, `CSQP-F-014`).
+- **Access Level:** Content Contributor or Administrator (`requireRole`)
+- **HTTP Method:** `POST`
+- **Request Body:**
+  ```json
+  {
+    "title": "Computer Networks Midterm Preparation Quiz",
+    "description": "TCP/IP architecture, subnetting, flow control and routing protocols",
+    "subject_id": 2,
+    "topic_id": 3,
+    "duration_minutes": 20,
+    "pass_percentage": 60,
+    "questions": [
+      {
+        "question_text": "What flag is sent by a client to initiate a 3-way TCP handshake?",
+        "question_type": "MULTIPLE_CHOICE",
+        "points": 2,
+        "options": ["SYN", "ACK", "FIN", "RST"],
+        "correct_option_index": 0
+      }
+    ]
+  }
+  ```
+- **Success Response (`201 Created`):**
+  ```json
+  {
+    "message": "Quiz created successfully",
+    "quiz_id": 8
+  }
+  ```
+
+---
+
+### `GET /api/quizzes`
+Retrieves all active quizzes with subject, topic, duration, and question count metadata (`CSQP-F-013`).
+- **Access Level:** Public / Authenticated
+- **HTTP Method:** `GET`
+- **Success Response (`200 OK`):**
+  ```json
+  {
+    "quizzes": [
+      {
+        "id": 8,
+        "title": "Computer Networks Midterm Preparation Quiz",
+        "subject_name": "Computer Networks",
+        "topic_name": "TCP/IP Protocol Suite",
+        "question_count": 5,
+        "duration_minutes": 20,
+        "pass_percentage": 60
+      }
+    ]
+  }
+  ```
+
+---
+
+### `GET /api/quizzes/:id/attempt`
+Retrieves randomized quiz questions for a student session. **Security Check (`CSQP-SR-003`):** Server strictly strips correct answer indices from the client JSON payload to prevent inspection attacks.
+- **Access Level:** Authenticated Student
+- **HTTP Method:** `GET`
+
+---
+
+### `POST /api/quizzes/:id/submit`
+Performs server-authoritative scoring of student answers, recording the attempt timestamp, score percentage, and pass/fail outcome (`CSQP-F-016`, `TC-QUIZ-03`).
+- **Access Level:** Authenticated Student
+- **HTTP Method:** `POST`
+- **Request Body:**
+  ```json
+  {
+    "answers": [
+      { "question_id": 1, "selected_option_index": 0 }
+    ],
+    "time_spent_seconds": 145
+  }
+  ```
+- **Success Response (`200 OK`):**
+  ```json
+  {
+    "score": 100,
+    "passed": true,
+    "earned_points": 2,
+    "total_points": 2,
+    "percentage": 100.0
+  }
+  ```
+
+---
+
+### `GET /api/quizzes/:id/leaderboard`
+Retrieves the dynamic ranked leaderboard for a quiz, sorted by highest score and lowest time taken (`CSQP-F-017`, `TC-QUIZ-07`).
+- **Access Level:** Public / Authenticated
+- **HTTP Method:** `GET`
+
+---
+
+### `GET /api/quizzes/user/history`
+Retrieves a student's personal chronological archive of completed quiz attempts (`CSQP-F-018`, `TC-QUIZ-06`).
+- **Access Level:** Authenticated Student
+- **HTTP Method:** `GET`
