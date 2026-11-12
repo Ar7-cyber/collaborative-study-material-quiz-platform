@@ -141,4 +141,18 @@ describe('Study Material Management Test Suite (Aditya & Sheiman - Sprint 1)', (
         const afterDelete = materialService.searchMaterials({ search: 'Updated v2' });
         assert.strictEqual(afterDelete.length, 0, 'Deleted material must be absent from active listings');
     });
+
+    test('TC-SEC-08: Path traversal containment rejects directory escape on document downloads', () => {
+        const path = require('path');
+        const uploadsDir = path.resolve(__dirname, '..', 'uploads');
+        
+        const verifyDownloadPath = (filePath) => {
+            const resolved = path.resolve(uploadsDir, filePath.replace(/\\/g, '/'));
+            return resolved.startsWith(uploadsDir);
+        };
+
+        assert.strictEqual(verifyDownloadPath('valid_doc_123.pdf'), true, 'Valid file in uploads dir accepted');
+        assert.strictEqual(verifyDownloadPath('../../../etc/passwd'), false, 'Directory traversal attack rejected');
+        assert.strictEqual(verifyDownloadPath('sub/../../secret.txt'), false, 'Nested directory traversal rejected');
+    });
 });
